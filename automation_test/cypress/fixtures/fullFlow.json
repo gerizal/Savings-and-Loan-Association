@@ -1,0 +1,109 @@
+{
+  "users": {
+    "admin": {
+      "email": "admin@example.com",
+      "password": "your_password",
+      "role": "Admin"
+    },
+    "data": {
+      "email": "data@mailinator.com",
+      "password": "your_password",
+      "role": "Data"
+    },
+    "bank": {
+      "email": "bank@mailinator.com",
+      "password": "your_password",
+      "role": "Bank"
+    },
+    "verifikasi": {
+      "email": "verifikasi@mailinator.com",
+      "password": "your_password",
+      "role": "Verifikasi"
+    },
+    "approval": {
+      "email": "approval@mailinator.com",
+      "password": "your_password",
+      "role": "Approval"
+    }
+  },
+  "simulationData": {
+    "nopen": "9999888777",
+    "name": "Test Simulasi Automation",
+    "address": "Jl. Test Simulasi No. 123, Jakarta",
+    "birth_date": "01-01-1959",
+    "salary": "8000000",
+    "plafon": "50000000",
+    "tenor": "24"
+  },
+  "applicationData": {
+    "personalData": {
+      "name": "Test Full Flow Automation",
+      "id_number": "3174019999888777",
+      "birth_place": "Jakarta",
+      "birth_date": "01-01-1959",
+      "tax_number": "999888777666555",
+      "phone_number": "081299887766",
+      "gender": "Laki - laki",
+      "education": "S1",
+      "religion": "Islam",
+      "mother_name": "Test Ibu Kandung"
+    },
+    "address": {
+      "address": "Jl. Test Automation No. 999, RT 001/RW 002",
+      "rt": "001",
+      "rw": "002",
+      "post_code": "12345"
+    },
+    "pensionData": {
+      "skep_name": "SK Pensiun Test Flow",
+      "nopen": "9999888777",
+      "skep_number": "SK/TEST/999",
+      "employee_code": "EMPTEST999",
+      "employee_grade": "IV/a",
+      "retirement_type": "Pensiun Normal",
+      "guarantee_skep_date": "01-01-2020",
+      "guarantee_skep_publisher": "PT Taspen"
+    },
+    "productData": {
+      "salary": "8000000",
+      "plafon": "50000000",
+      "tenor": "24",
+      "purpose": "Modal Usaha Test Flow",
+      "interest_type": "Flat",
+      "referral_fee": "2.5"
+    },
+    "serviceUnit": {
+      "marketing_name": "Marketing Test"
+    }
+  },
+  "verificationData": {
+    "slik": {
+      "status": "approve",
+      "notes": "SLIK verified and approved by automation test"
+    },
+    "financing": {
+      "status": "approve",
+      "notes": "Financing verification approved by automation test"
+    }
+  },
+  "approvalData": {
+    "status": "approve",
+    "notes": "Application approved by automation test"
+  },
+  "disbursementData": {
+    "dropping_date": "01-01-2024",
+    "notes": "Disbursement processed by automation test"
+  },
+  "reportingData": {
+    "reportTypes": [
+      "daftar-nominatif",
+      "arus-kas",
+      "daftar-outstanding-aktif",
+      "laporan-bulanan"
+    ],
+    "dateRange": {
+      "startDate": "01-01-2024",
+      "endDate": "31-12-2024"
+    }
+  }
+}

@@ -1,0 +1,356 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Taspen;
+use App\Models\Province;
+use App\Models\Product;
+use App\Models\FinanceType;
+use App\Models\Application;
+use App\Models\BranchUnit;
+use App\Models\Referral;
+use App\Models\ServiceUnit;
+use Illuminate\Support\Facades\DB;
+use App\Models\User;
+use App\Models\Bank;
+use App\Models\Verification;
+use App\Models\Approval;
+use App\Models\District;
+use App\Models\Document;
+use App\Models\SubDistrict;
+use App\Models\City;
+use App\Models\FamilyMember;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Contract;
+use App\Models\Domicile;
+class MonitoringController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index()
+    {
+        $banks = Bank::select('id','name')->get();
+        return view('monitoring.index',compact('banks'));
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        $application = Application::find($id);
+        if($application){
+            $marketing = User::find($application->marketing_id);
+            if($marketing){
+                $application->job_position = $marketing->job_title;
+                $application->pkwt_status = $marketing->status_pkwt;
+            }
+
+            $product = Product::find($application->product_id);
+            $bank = Bank::find($product->bank_id);
+            $finance_type = FinanceType::find($application->finance_type_id);
+            $interest = $product->interest/100;
+            $monthlyInterest = $interest/12;
+            $maxInstallment = $application->salary*($bank->installment_fee/100);
+            $maxPlafon = PV($monthlyInterest,$application->tenor, $maxInstallment);
+            $application->max_plafon = $maxPlafon;
+            $maxTenor = $product->max_tenor;
+            $year = 73;
+            $month = 8;
+            if((($product->max_paid_age-$year)*12)-($month+1) <= $maxTenor){
+                $maxTenor = (($product->max_paid_age-$year)*12)-($month+1);
+            }
+            $application->max_tenor = $maxTenor;
+            $application->max_installment = $maxInstallment;
+            $administration_fee = $application->administration_fee;
+            $management_fee = $application->management_fee;
+            $insurance_fee = $application->insurance_fee;
+            $account_opening_fee = $application->account_opening_fee;
+            $stamp_fee = $application->stamp_fee;
+            $by_info = $bank->epotpen_fee + $bank->flagging_fee;
+            $mutation_fee = $application->mutation_fee;
+            $provision_fee = $application->provision_fee;
+            $block_installment = $application->block_installment * $application->installment;
+            $deduction = intval($administration_fee)+intval($management_fee)+intval($insurance_fee)+intval($account_opening_fee)+intval($stamp_fee)+intval($by_info)+intval($mutation_fee)+intval($provision_fee)+intval($block_installment);
+            $gross_amount = $application->plafon-$deduction;
+            $repayment_fee = $application->repayment_fee;
+            $bpp_fee = $application->bpp_fee;
+            $net_amount = $application->plafon-$deduction-intval($repayment_fee)-intval($bpp_fee);
+            $application->gross_amount = $gross_amount;
+            $application->net_amount = $net_amount;
+            $application->rest_salary = $application->salary - $application->installment;
+            $application->blockir_fee = $block_installment;
+            $application->information_fee = $by_info;
+            $approval = Approval::whereApplicationId($id)->first();
+            if($approval){
+                $application->status = $approval->status;
+                $application->checker_name = $approval->checker_name;
+                $application->checked_by = $approval->checked_by;
+                $application->checked_at = $approval->updated_at;
+            }
+            $application->documents = Document::whereDocumentId($id)->whereNotNull('url')->groupBy('type')->orderBy('id','ASC')->get();
+            $domicile = Domicile::whereTaspenId($application->taspen_id)->first();
+            if($domicile){
+                $new_documents = new \stdClass();
+                $new_documents->type='map';
+                $new_documents->address = $domicile->address;
+                $new_documents->latitude = $domicile->latitude;
+                $new_documents->longitude = $domicile->longitude;
+                $application->documents[] = $new_documents;
+            }
+            $data=[
+                'data'   =>$application,
+                'form' =>[
+                    'url'       => route('monitoring.approve-reject',$application->id),
+                    'method'    => 'POST',
+                    'files'     => true,
+                    'id'        =>'form-loan'
+                ],
+                'products' => Product::select('id','name')->get()->pluck('name','id'),
+                'types' => FinanceType::select('id','name')->get()->pluck('name','id'),
+                'taspens' => Taspen::orderBy('nopen')->get()->mapWithKeys(fn($t) => [$t->id => $t->nopen.' - '.$t->name]),
+                'provinces'=> Province::orderBy('name','DESC')->pluck('name','id'),
+                'cities'=> [],
+                'districts'=> [],
+                'sub_districts'=> [],
+                'service_units'=>ServiceUnit::orderBy('name','ASC')->pluck('name','id'),
+                'branch_units'=> BranchUnit::whereServiceUnitId($application->service_unit_id)->orderBy('name','ASC')->pluck('name','id'),
+                'marketings'=> User::whereBranchUnitId($application->branch_unit_id)->orderBy('id','ASC')->pluck('name','id'),
+                'referral'=>Referral::orderBy('name','ASC')->pluck('name','id')
+            ];
+
+            return view('monitoring.view', $data);
+        }else{
+            return redirect('404');
+        }
+    }
+
+    /**
+     * get datatable.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function datatable(Request $request)
+    {
+        $data = Application::monitoringDataTable($request);
+        return datatables()->of($data)
+        ->addColumn('action', function($row){
+            $action = '<div class="text-center">
+                    <a href="'.route('monitoring.show', $row->application_id).'" class="btn btn-info btn-sm btn-md"><i class="fas fa-eye"></i> Detail</a>
+                </div>';
+            $action .= '<div class="text-center">
+                <a href="'.route('monitoring.destroy', $row->application_id).'" class="btn btn-danger btn-sm btn-md btn-delete btn-modal-delete"><i class="fas fa-trash"></i> Hapus</a>
+            </div>';
+            return $action;
+        })
+        ->addColumn('status', function($row){
+
+            $status = '<span class="badge badge-pill badge-warning">Antri</span>';
+            if($row->approval_status == 'on process'){
+                $status = '<span class="badge badge-pill badge-info">Antri</span>';
+            }
+            if($row->approval_status == 'reject'){
+                $status = '<span class="badge badge-pill badge-danger">Ditolak</span>';
+            }
+            if($row->approval_status == 'pending'){
+                $status = '<span class="badge badge-pill badge-warning">Pending</span>';
+            }
+            if($row->approval_status == 'approve'){
+                $status = '<span class="badge badge-pill badge-success">Setuju</span>';
+            }
+
+            return $status;
+        })
+        ->addColumn('slik_status', function($row){
+
+            $status = '<span class="badge badge-pill badge-warning">Antri</span>';
+            if($row->slik_status == 'on process'){
+                $status = '<span class="badge badge-pill badge-info">Antri</span>';
+            }
+            if($row->slik_status == 'reject'){
+                $status = '<span class="badge badge-pill badge-danger">Ditolak</span>';
+            }
+            if($row->slik_status == 'pending'){
+                $status = '<span class="badge badge-pill badge-warning">Pending</span>';
+            }
+            if($row->slik_status == 'approve'){
+                $status = '<span class="badge badge-pill badge-success">Setuju</span>';
+            }
+
+            return $status;
+        })
+        ->addColumn('approval_status', function($row){
+
+            $status = '<span class="badge badge-pill badge-warning">Antri</span>';
+            if($row->approval_status == 'on process'){
+                $status = '<span class="badge badge-pill badge-info">Antri</span>';
+            }
+            if($row->approval_status == 'reject'){
+                $status = '<span class="badge badge-pill badge-danger">Ditolak</span>';
+            }
+            if($row->approval_status == 'pending'){
+                $status = '<span class="badge badge-pill badge-warning">Pending</span>';
+            }
+            if($row->approval_status == 'approve'){
+                $status = '<span class="badge badge-pill badge-success">Setuju</span>';
+            }
+
+            return $status;
+        })
+        ->addColumn('verification_status', function($row){
+
+            $status = '<span class="badge badge-pill badge-warning">Antri</span>';
+            if($row->verification_status == 'on process'){
+                $status = '<span class="badge badge-pill badge-info">Antri</span>';
+            }
+            if($row->verification_status == 'reject'){
+                $status = '<span class="badge badge-pill badge-danger">Ditolak</span>';
+            }
+            if($row->verification_status == 'pending'){
+                $status = '<span class="badge badge-pill badge-warning">Pending</span>';
+            }
+            if($row->verification_status == 'approve'){
+                $status = '<span class="badge badge-pill badge-success">Setuju</span>';
+            }
+
+            return $status;
+        })
+        ->addColumn('disbursement_status', function($row){
+
+            $status = '<span class="badge badge-pill badge-warning">ANTRI</span>';
+            if($row->disbursement_status == 'on process'){
+                $status = '<span class="badge badge-pill badge-info">ANTRI</span>';
+            }
+            if($row->disbursement_status == 'reject'){
+                $status = '<span class="badge badge-pill badge-danger">BATAL</span>';
+            }
+            if($row->disbursement_status == 'pending'){
+                $status = '<span class="badge badge-pill badge-warning">PENDING</span>';
+            }
+            if($row->disbursement_status == 'approve'){
+                $status = '<span class="badge badge-pill badge-success">TRANSFER</span>';
+            }
+
+            return $status;
+        })
+        ->addColumn('updated_at', function($row){
+            return date("d-m-Y  H:i", strtotime($row->updated_at));
+        })
+        ->addColumn('print_akad', function($row){
+            $button = '';
+            if($row->verification_status == 'approve' && $row->approval_status == 'approve' && $row->slik_status == 'approve'){
+                $url=route('application.print.contract', $row->application_id);
+                $number = '00'.$row->application_id.'/KPF-'.strtoupper($row->branch_name).'/'.$row->code_bank.'/';
+                $button = '<button type="button" class="btn btn-default print-contract" data-interest_type="'.$row->interest_type.'" data-interest ="'.$row->interest.'" data-id="'.$row->application_id.'" data-url ="'.$url.'" data-product_name="'.$row->product_name.'" data-finance_type="'.$row->finance_type.'" data-bank_name="'.$row->bank_name.'" data-number="'.$number.'"><i class="fas fa-print"></i></button>';
+            }
+            return $button;
+        })
+        ->addColumn('view_akad', function($row){
+            $button = '<button type="button" class="btn btn-default view_contract" disabled><i class="fas fa-file"></i></button>';
+            if($row->file_url != '' || $row->file_url != null){
+                $url=generateSecureUrl($row->file_url);
+                $button = '<button type="button" data-toggle="modal" data-target="#modalViewFile" data-type="pdf" data-title="Akad '.$row->name.'" class="btn btn-default view_contract" data-id="'.$row->application_id.'" data-url ="'.$url.'"><i class="fas fa-file"></i></button>';
+            }
+            return $button;
+        })
+        ->addColumn('view_installment', function($row){
+            $button = '';
+            if($row->disbursement_status == 'approve' || $row->disbursement_status == 'on process'){
+                $url = route('installment.detail',$row->application_id);
+                $button = '<div class="text-center"><a href="'.$url.'" class="btn btn-success btn-sm btn-md"><i class="fas fa-eye"></i></a></div>';
+            }
+            return $button;
+        })
+        ->addIndexColumn()
+        ->rawColumns(['action','status','slik_status','verification_status','updated_at','print_akad','view_akad', 'approval_status','disbursement_status','view_installment'])
+        ->make(true);
+    }
+
+    /**
+     * get datatable.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function approveReject(Request $request, $id)
+    {
+        $request->validate(['status' => 'required']);
+
+        try {
+            DB::beginTransaction();
+            $user = \Auth::user();
+            $data = Application::find($id);
+            if($data){
+                $approval                       = Approval::where('application_id', $id)->first();
+                if(!$approval){
+                    $approval           = new Approval;
+                    $approval->application_id   = $id;
+                }
+                $approval->status               = $request->status;
+                $approval->checked_by           = $user->id;
+                $approval->checker_name         = $user->name;
+                $approval->description          = $request->description;
+                $approval->save();
+            }
+            DB::commit();
+            return redirect()->route('monitoring.index')->withSuccess('Success');
+        } catch (\Exceptions $e) {
+            DB::rollback();
+            return redirect()->back()->withInput($request->all())->withErrors($e->all());
+        }
+    }
+
+
+    /**
+     * get datatable.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function printContract(Request $request, $id)
+    {
+        try {
+            $user = \Auth::user();
+            $application = Application::find($id);
+            if($application){
+                return Contract::generateContract($id);
+            }
+        } catch (\Exceptions $e) {
+            return response()->json($e->all());
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  \App\Models\Application  $application
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        try {
+            DB::beginTransaction();
+            if(check_access('pengajuan_slik','delete')  == true){
+                Application::deleteData($id);
+                DB::commit();
+                session()->flash('message','Delete Successfully');
+                return redirect()->route('application.loan.index');
+            }else{
+                \Log::info('HERE2');
+                return back();
+            }
+        } catch (\Exception $e) {
+            DB::rollback();
+            session()->flash('message','Data cannot be deleted');
+            return redirect()->route('application.loan.index');
+        }
+    }
+}

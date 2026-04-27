@@ -1,0 +1,129 @@
+{
+  "validApplication": {
+    "personalData": {
+      "name": "Budi Santoso Pensiunan",
+      "id_number": "3174012345678901",
+      "birth_place": "Jakarta",
+      "birth_date": "01-01-1959",
+      "tax_number": "123456789012345",
+      "phone_number": "081234567890",
+      "gender": "Laki - laki",
+      "education": "S1",
+      "religion": "Islam",
+      "mother_name": "Siti Rahmawati"
+    },
+    "address": {
+      "address": "Jl. Merdeka No. 123, RT 001/RW 002",
+      "rt": "001",
+      "rw": "002",
+      "post_code": "12345"
+    },
+    "pensionData": {
+      "skep_name": "SK Pensiun Budi",
+      "nopen": "1234567890",
+      "skep_number": "SK/2020/001",
+      "employee_code": "EMP123",
+      "employee_grade": "IV/a",
+      "retirement_type": "Pensiun Normal",
+      "guarantee_skep_date": "01-01-2020",
+      "guarantee_skep_publisher": "PT Taspen"
+    },
+    "productData": {
+      "salary": "8000000",
+      "plafon": "50000000",
+      "tenor": "24",
+      "purpose": "Modal Usaha",
+      "interest_type": "Flat",
+      "referral_fee": "2.5"
+    },
+    "serviceUnit": {
+      "marketing_name": "Marketing Test"
+    }
+  },
+  "validApplicationAge16": {
+    "personalData": {
+      "name": "Ahmad Muda",
+      "id_number": "3174012345678902",
+      "birth_place": "Jakarta",
+      "birth_date": "01-01-2010",
+      "tax_number": "123456789012346",
+      "phone_number": "081234567891",
+      "gender": "Laki - laki",
+      "education": "SMA",
+      "religion": "Islam",
+      "mother_name": "Siti Aminah"
+    },
+    "address": {
+      "address": "Jl. Merdeka No. 123, RT 001/RW 002",
+      "rt": "001",
+      "rw": "002",
+      "post_code": "12345"
+    },
+    "pensionData": {
+      "skep_name": "SK Pensiun Ahmad",
+      "nopen": "1234567891",
+      "skep_number": "SK/2020/002",
+      "employee_code": "EMP124",
+      "employee_grade": "II/a",
+      "retirement_type": "Pensiun Normal",
+      "guarantee_skep_date": "01-01-2020",
+      "guarantee_skep_publisher": "PT Taspen"
+    },
+    "productData": {
+      "salary": "5000000",
+      "plafon": "30000000",
+      "tenor": "24",
+      "purpose": "Modal Usaha",
+      "interest_type": "Flat",
+      "referral_fee": "2.5"
+    },
+    "serviceUnit": {
+      "marketing_name": "Marketing Test"
+    }
+  },
+  "validApplicationAge75": {
+    "personalData": {
+      "name": "Haji Ahmad Tua",
+      "id_number": "3174012345678903",
+      "birth_place": "Jakarta",
+      "birth_date": "01-01-1951",
+      "tax_number": "123456789012347",
+      "phone_number": "081234567892",
+      "gender": "Laki - laki",
+      "education": "S1",
+      "religion": "Islam",
+      "mother_name": "Siti Khadijah"
+    },
+    "address": {
+      "address": "Jl. Merdeka No. 123, RT 001/RW 002",
+      "rt": "001",
+      "rw": "002",
+      "post_code": "12345"
+    },
+    "pensionData": {
+      "skep_name": "SK Pensiun Ahmad",
+      "nopen": "1234567892",
+      "skep_number": "SK/2020/003",
+      "employee_code": "EMP125",
+      "employee_grade": "IV/d",
+      "retirement_type": "Pensiun Normal",
+      "guarantee_skep_date": "01-01-2020",
+      "guarantee_skep_publisher": "PT Taspen"
+    },
+    "productData": {
+      "salary": "10000000",
+      "plafon": "60000000",
+      "tenor": "24",
+      "purpose": "Modal Usaha",
+      "interest_type": "Flat",
+      "referral_fee": "2.5"
+    },
+    "serviceUnit": {
+      "marketing_name": "Marketing Test"
+    }
+  },
+  "credentials": {
+    "email": "admin@example.com",
+    "password": "your_password"
+  }
+}

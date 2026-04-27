@@ -1,0 +1,33 @@
+.tooltiptext {
+    visibility: hidden;
+    width: 270px;
+    background-color: white;
+    color: #404040;
+    line-height: 18px;
+    text-align: left;
+    border-radius: 6px;
+    padding: 12px;
+    position: absolute;
+    z-index: 1;
+    top: 25px;
+    left: 101%;
+    box-shadow: 0px 0px 8px 4px rgba(207, 207, 207, 0.32);
+  }
+  .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 13px;
+    right: 100%;
+    margin-top: -5px;
+    border-width: 10px;
+    border-style: solid;
+    border-color: transparent white transparent transparent;
+  }
+  .pass-req {
+    display: block;
+    color: #cfcfcf;
+    margin-top: 8px;
+  }
+  .pass-req.active {
+    color: #2cb582 !important;
+  }

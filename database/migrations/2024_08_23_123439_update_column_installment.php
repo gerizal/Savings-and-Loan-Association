@@ -1,0 +1,40 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class UpdateColumnInstallment extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::table('installment_schedules', function (Blueprint $table) {
+            $table->string('payment_type')->nullable();
+            $table->string('payment_code')->nullable();
+            $table->string('file')->nullable();
+            $table->text('description')->nullable();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::table('installment_schedules', function (Blueprint $table) {
+            $table->dropColumn([
+                'payment_type',
+                'payment_code',
+                'file',
+                'description'
+            ]);
+        });
+    }
+}
